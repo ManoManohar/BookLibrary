@@ -12,23 +12,33 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorDTO> handleResourceNotFoundException(ResourceNotFoundException exception) {
-        ErrorDTO errorDTO = new ErrorDTO(LocalDateTime.now(), exception.getMessage(), HttpStatus.NOT_FOUND.value());
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+
+    // Helper method to reduce code duplication
+    private ResponseEntity<ErrorDTO> createErrorResponse(String message, HttpStatus status) {
+        return new ResponseEntity<>(
+                new ErrorDTO(LocalDateTime.now(), message, status.value()),
+                status
+        );
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorDTO> handleGenericException(Exception exception) {
-        ErrorDTO errorDTO = new ErrorDTO(LocalDateTime.now(), "unexcepted error occurred", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorDTO> handleResourceNotFoundException(ResourceNotFoundException exception) {
+        return createErrorResponse(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDTO> handleValidationError(MethodArgumentNotValidException exception) {
-        String message = exception.getBindingResult()
-                .getFieldErrors().stream().map(error -> error.getField() + ": " + error.getDefaultMessage()).collect(Collectors.joining());
-        ErrorDTO errorDTO = new ErrorDTO(LocalDateTime.now(), message, HttpStatus.BAD_REQUEST.value());
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        String validationErrors = exception.getBindingResult().getFieldErrors().stream()
+                .map(error -> "Field [" + error.getField() + "]: " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        return createErrorResponse(validationErrors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorDTO> handleGenericException(Exception exception) {
+        return createErrorResponse(
+                "An unexpected error occurred: " + exception.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR
+        );
     }
 }
