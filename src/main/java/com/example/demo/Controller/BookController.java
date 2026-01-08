@@ -2,6 +2,7 @@ package com.example.demo.Controller;
 
 import com.example.demo.Model.Book;
 import com.example.demo.Service.BookService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class BookController {
         return ResponseEntity.ok(book);
     }
     @PostMapping("/addBook")
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
+    public ResponseEntity<Book> addBook(@RequestBody @Valid Book book) {
         Book savedBook = bookService.addBook(book);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
     }
@@ -36,12 +37,8 @@ public class BookController {
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/updateBook/{id}")
-    public ResponseEntity<Book> updateBookById(@RequestBody Book book,@PathVariable int id){
-        Book existingBook = bookService.getBookById(id);
-        existingBook.setAuthor(book.getAuthor());
-        existingBook.setPrice(book.getPrice());
-        existingBook.setTitle(book.getTitle());
-        Book savedBook = bookService.addBook(existingBook);
-        return ResponseEntity.ok(savedBook);
+    public ResponseEntity<Book> updateBookById(@RequestBody @Valid Book book, @PathVariable int id){
+        Book updatedBook = bookService.updateBookById(id,book);
+        return ResponseEntity.ok(updatedBook);
     }
 }
