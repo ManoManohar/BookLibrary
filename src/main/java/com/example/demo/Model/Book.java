@@ -21,7 +21,12 @@ public class Book {
     @NotNull(message = "Price must not be null")
     @Min(value = 1, message = "Price must be a positive number")
     double price;
-
+    public Book(int id, String title, String author, double price) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
     public int getId() {
         return id;
     }
