@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +46,49 @@ class BookServiceTest {
         assertEquals(2, books.size());
         verify(bookRepository, times(1)).findAll();
     }
+    @Test
+    void testGetAllBooks_EmptyList() {
+        // Arrange
+        when(bookRepository.findAll()).thenReturn(Collections.emptyList());
 
+        // Act
+        List<Book> books = bookService.getAllBooks();
+
+        // Assert
+        assertNotNull(books);
+        assertTrue(books.isEmpty());
+        verify(bookRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testAddBook_NullBook() {
+        // Act & Assert
+        NullPointerException exception = assertThrows(NullPointerException.class, () -> {
+            bookService.addBook(null);
+        });
+        assertEquals("book must not be null", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateBookById_PartialUpdate() {
+        // Arrange
+        int bookId = 1;
+        Book existingBook = new Book(bookId, "Old Title", "Old Author", 30.0);
+        Book updatedBook = new Book(bookId, "Updated Title", null, 0.0);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(existingBook));
+        when(bookRepository.save(existingBook)).thenReturn(existingBook);
+
+        // Act
+        Book result = bookService.updateBookById(bookId, updatedBook);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Updated Title", result.getTitle());
+        assertEquals("Old Author", result.getAuthor()); // Ensure author is not updated
+        assertEquals(30.0, result.getPrice()); // Ensure price is not updated
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(bookRepository, times(1)).save(existingBook);
+    }
     @Test
     void testGetBookById_BookExists() {
         // Arrange

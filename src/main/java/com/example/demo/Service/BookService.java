@@ -72,6 +72,7 @@ public class BookService {
             @CacheEvict(value = "books", key = "#id"),
             @CacheEvict(value = "booksAll", allEntries = true)
     })
+
     public Book updateBookById(int id, Book book) {
         Objects.requireNonNull(book, "book must not be null");
         log.info("Updating book with id: {}", id);
@@ -81,9 +82,15 @@ public class BookService {
                     return new ResourceNotFoundException("Book not found with id: " + id);
                 });
 
-        existingBook.setTitle(book.getTitle());
-        existingBook.setAuthor(book.getAuthor());
-        existingBook.setPrice(book.getPrice());
+        if (book.getTitle() != null) {
+            existingBook.setTitle(book.getTitle());
+        }
+        if (book.getAuthor() != null) {
+            existingBook.setAuthor(book.getAuthor());
+        }
+        if (book.getPrice() != 0.0) {
+            existingBook.setPrice(book.getPrice());
+        }
 
         Book updatedBook = bookRepository.save(existingBook);
         log.info("Updated book with id: {} successfully", id);
